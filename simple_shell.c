@@ -10,32 +10,29 @@
 int copy_idandexe(char *command)
 {
 	pid_t pid;
+	int status;
 	char *argv[2];
 
 	argv[0] = command;
 	argv[1] = NULL;
-	pid = fork();
 
+	pid = fork();
 	if (pid == -1)
-	{
 		return (-1);
-	}
 
 	if (pid == 0)
 	{
 		execve(command, argv, environ);
-		perror("Error");
-		exit(127);
+		_exit(127); /* execve a échoué */
 	}
-	else
-	{
-		if (wait(NULL) == -1)
-		{
-			perror("wait");
-			return (-1);
-		}
-	}
-	return (1);
+
+	if (waitpid(pid, &status, 0) == -1)
+		return (-1);
+
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+
+	return (-1);
 }
 
 /**
@@ -45,12 +42,13 @@ int copy_idandexe(char *command)
  * Return: 0 (No errors)
  */
 
-int main(void)
+int main(int argc, char **argv)
 {
 	size_t length = 0;
 	char *line = NULL;
-	int null_checker;
+	int null_checker, ret;
 	ssize_t stored_line;
+	(void)argc;
 
 	while (1)
 	{
@@ -88,9 +86,14 @@ int main(void)
 		{
 			break;
 		}
-		if (copy_idandexe(line) == -1)
+		ret = copy_idandexe(line);
+		if (ret == 127)
 		{
-			fprintf(stderr, "./elshellito: 1: %s: not found\n", line);
+			fprintf(stderr, "%s: 1: %s: not found\n", argv[0], line);
+		}
+		else if (ret == -1)
+		{
+		perror("fork/wait");
 		}
 	}
 	free(line);
