@@ -16,5 +16,6 @@
 
 extern char **environ;
 int copy_idandexe(char *command, char *the_shell);
+void strip_newline(char *line);
 
 #endif
