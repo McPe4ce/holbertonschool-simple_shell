@@ -10,6 +10,7 @@ char *read_line(size_t *bufsize)
 {
 	char *line = NULL;
 	ssize_t nread;
+	int start, end, i;
 
 	nread = getline(&line, bufsize, stdin);
 	if (nread == -1)
@@ -18,7 +19,18 @@ char *read_line(size_t *bufsize)
 		return (NULL);
 	}
 	if (line[nread - 1] == '\n')
-		line[nread - 1] = '\0';
+		line[--nread] = '\0';
+	start = 0;
+	while (line[start] == ' ' || line[start] == '\t')
+		start++;
+	end = nread;
+	while (end > start && (line[end - 1] == ' ' || line[end - 1] == '\t'))
+		end--;
+	line[end] = '\0';
+	i = 0;
+	while (start < end)
+		line[i++] = line[start++];
+	line[i] = '\0';
 	return (line);
 }
 
