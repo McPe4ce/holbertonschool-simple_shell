@@ -1,50 +1,59 @@
 #include "simple_shell.h"
 
 /**
- * copy_idandexe - Fork and execve a command.
- * @command: command to execute
- * @the_shell: argv[0] for error messages
- * Return: -1 on fork/wait error, child exit status otherwise
+ * read_line - reads one line from stdin
+ * @bufsize: pointer to buffer size (managed by getline)
+ *
+ * Return: pointer to line, or NULL on EOF
  */
-
-int copy_idandexe(char *command, char *the_shell)
+char *read_line(size_t *bufsize)
 {
-	pid_t pid;
-	int status;
-	char *argv[2];
+	char *line = NULL;
+	ssize_t nread;
 
-	pid = fork();
-	if (pid == -1)
-		return (-1);
-	if (pid == 0)
+	nread = getline(&line, bufsize, stdin);
+	if (nread == -1)
 	{
-		argv[0] = command;
-		argv[1] = NULL;
-		execve(command, argv, environ);
-		fprintf(stderr, "%s: 1: %s: not found\n", the_shell, command);
-		_exit(127);
+		free(line);
+		return (NULL);
 	}
-	if (waitpid(pid, &status, 0) == -1)
-		return (-1);
-	if (WIFEXITED(status))
-		return (WEXITSTATUS(status));
-	return (-1);
+	if (line[nread - 1] == '\n')
+		line[nread - 1] = '\0';
+	return (line);
 }
 
 /**
- * strip_newline - Replace trailing newline in line with '\0'.
- * @line: line read from getline
+ * exec_cmd - forks and executes a command
+ * @line: the command to execute
+ * @argv: pointer to argv[0] for error messages
+ * @line_num: current line number for error messages
  */
-void strip_newline(char *line)
+void exec_cmd(char *line, char **argv, int line_num)
 {
-	int i;
+	char *args[2];
+	pid_t pid;
+	int status;
 
-	for (i = 0; line[i] != '\0'; i++)
+	args[0] = line;
+	args[1] = NULL;
+
+	pid = fork();
+	if (pid == -1)
 	{
-		if (line[i] == '\n')
+		perror("fork");
+		return;
+	}
+	if (pid == 0)
+	{
+		if (execve(line, args, environ) == -1)
 		{
-			line[i] = '\0';
-			return;
+			fprintf(stderr, "%s: %d: %s: not found\n",
+				argv[0], line_num, line);
+			exit(127);
 		}
+	}
+	else
+	{
+		waitpid(pid, &status, 0);
 	}
 }
