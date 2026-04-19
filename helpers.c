@@ -49,7 +49,7 @@ void exec_cmd(char *line, char **argv, int line_num)
 		{
 			fprintf(stderr, "%s: %d: %s: not found\n",
 				argv[0], line_num, line);
-				free (line);
+				free(line);
 			_exit(127);
 		}
 	}
