@@ -1,10 +1,9 @@
 #include "simple_shell.h"
 
 /**
- * copy_idandexe - Creates the child process and execute the process
- * if found while telling parent to wait.
+ * copy_idandexe - Creates the child process and executes the command.
  * @command: Command given by the user in the terminal
- * Return: -1 (Error), 1 (Successfully executed program)
+ * Return: -1 on fork/wait error, exit status of child otherwise (127 if not found)
  */
 
 int copy_idandexe(char *command)
@@ -23,7 +22,7 @@ int copy_idandexe(char *command)
 	if (pid == 0)
 	{
 		execve(command, argv, environ);
-		_exit(127); /* execve a échoué */
+		_exit(127);
 	}
 
 	if (waitpid(pid, &status, 0) == -1)
@@ -36,17 +35,17 @@ int copy_idandexe(char *command)
 }
 
 /**
- * main - Executes the shell, checks if we are in interactive to print prompt
- * gets the line of the input to analyse the command and replaces the new
- * line with NULL char before calling the func that executes process
- * Return: 0 (No errors)
+ * main - Simple shell entry point
+ * @argc: argument count (unused)
+ * @argv: argument vector, argv[0] used for error messages
+ * Return: exit status of last executed command
  */
 
 int main(int argc, char **argv)
 {
 	size_t length = 0;
 	char *line = NULL;
-	int null_checker, ret;
+	int null_checker, ret, last_status = 0;
 	ssize_t stored_line;
 	(void)argc;
 
@@ -60,12 +59,6 @@ int main(int argc, char **argv)
 		stored_line = getline(&line, &length, stdin);
 		if (stored_line == -1)
 		{
-			if (ferror(stdin))
-			{
-				perror("getline");
-				free(line);
-				return (1);
-			}
 			if (isatty(STDIN_FILENO))
 				putchar('\n');
 			break;
@@ -79,23 +72,25 @@ int main(int argc, char **argv)
 			}
 		}
 		if (line[0] == '\0')
-		{
 			continue;
-		}
 		if (strcmp(line, "exit") == 0)
-		{
 			break;
-		}
 		ret = copy_idandexe(line);
 		if (ret == 127)
 		{
 			fprintf(stderr, "%s: 1: %s: not found\n", argv[0], line);
+			last_status = 127;
 		}
 		else if (ret == -1)
 		{
-		perror("fork/wait");
+			perror("fork/wait");
+			last_status = 1;
+		}
+		else
+		{
+			last_status = ret;
 		}
 	}
 	free(line);
-	return (0);
+	return (last_status);
 }
