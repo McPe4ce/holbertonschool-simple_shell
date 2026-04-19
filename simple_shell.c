@@ -1,55 +1,19 @@
 #include "simple_shell.h"
 
 /**
- * copy_idandexe - Creates the child process and execute the process
- * if found while telling parent to wait.
- * @command: Command given by the user in the terminal
- * Return: -1 (Error), 1 (Successfully executed program)
+ * main - Entry point for the simple shell program.
+ * @argc: Argument count (not used).
+ * @argv: Argument vector (used for error messages).
+ * Return: Always 0 (success).
  */
 
-int copy_idandexe(char *command)
-{
-	pid_t pid;
-	char *argv[2];
-
-	argv[0] = command;
-	argv[1] = NULL;
-	pid = fork();
-
-	if (pid == -1)
-	{
-		return (-1);
-	}
-
-	if (pid == 0)
-	{
-		execve(command, argv, environ);
-		perror("Error");
-		exit(127);
-	}
-	else
-	{
-		if (wait(NULL) == -1)
-		{
-			perror("wait");
-			return (-1);
-		}
-	}
-	return (1);
-}
-
-/**
- * main - Executes the shell, checks if we are in interactive to print prompt
- * gets the line of the input to analyse the command and replaces the new
- * line with NULL char before calling the func that executes process
- * Return: 0 (No errors)
- */
-
-int main(void)
+int main(int argc, char **argv)
 {
 	size_t length = 0;
 	char *line = NULL;
-	int null_checker;
+	int ret, last_status = 0;
+	ssize_t stored_line;
+	(void)argc;
 
 	while (1)
 	{
@@ -58,33 +22,21 @@ int main(void)
 			printf("($) ");
 			fflush(stdout);
 		}
-
-		if (getline(&line, &length, stdin) == -1)
+		stored_line = getline(&line, &length, stdin);
+		if (stored_line == -1)
 		{
+			if (isatty(STDIN_FILENO))
+				putchar('\n');
 			break;
 		}
-		for (null_checker = 0; line[null_checker] != '\0'; null_checker++)
-		{
-			if (line[null_checker] == '\n')
-			{
-				line[null_checker] = '\0';
-				break;
-			}
-		}
+		strip_newline(line);
 		if (line[0] == '\0')
-		{
 			continue;
-		}
 		if (strcmp(line, "exit") == 0)
-		{
 			break;
-		}
-		if (copy_idandexe(line) == -1)
-		{
-			fprintf(stderr, "./elshellito: 1: %s: not found\n", line);
-		}
+		ret = copy_idandexe(line, argv[0]);
+		last_status = (ret == -1) ? 1 : ret;
 	}
 	free(line);
-	printf("\n");
-	return (0);
+	return (last_status);
 }
