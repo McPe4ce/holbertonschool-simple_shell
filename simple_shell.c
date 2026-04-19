@@ -50,6 +50,7 @@ int main(void)
 	size_t length = 0;
 	char *line = NULL;
 	int null_checker;
+	ssize_t stored_line;
 
 	while (1)
 	{
@@ -58,9 +59,17 @@ int main(void)
 			printf("($) ");
 			fflush(stdout);
 		}
-
-		if (getline(&line, &length, stdin) == -1)
+		stored_line = getline(&line, &length, stdin);
+		if (stored_line == -1)
 		{
+			if (ferror(stdin))
+			{
+				perror("getline");
+				free(line);
+				return (1);
+			}
+			if (isatty(STDIN_FILENO))
+				putchar('\n');
 			break;
 		}
 		for (null_checker = 0; line[null_checker] != '\0'; null_checker++)
@@ -85,6 +94,5 @@ int main(void)
 		}
 	}
 	free(line);
-	printf("\n");
 	return (0);
 }
