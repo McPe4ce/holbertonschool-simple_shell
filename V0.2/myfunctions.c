@@ -1,24 +1,24 @@
 #include "simple_shell.h"
 
 /**
- * free_exec - Frees the arguments array and the path string
- * @args: Arguments array (each element freed, then the array)
- * @the_path: Path string returned by pathfinder
+ * free_args - Frees the arguments of the array one by one before freeing
+ * the array
+ * @args: Arguments
  */
-void free_exec(char **args, char *the_path)
+void free_args(char **args)
 {
 	int indexor = 0;
 
-	if (args)
+	if (!args)
 	{
-		while (args[indexor])
-		{
-			free(args[indexor]);
-			indexor++;
-		}
-		free(args);
+		return;
 	}
-	free(the_path);
+	while (args[indexor])
+	{
+		free(args[indexor]);
+		indexor++;
+	}
+	free(args);
 }
 
 /**
