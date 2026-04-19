@@ -15,6 +15,6 @@
 */
 
 extern char **environ;
-int copy_idandexe(char *command);
+int copy_idandexe(char *command, char *the_shell);
 
 #endif

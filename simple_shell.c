@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 {
 	size_t length = 0;
 	char *line = NULL;
-	int null_checker, ret, last_status = 0;
+	int null_checker, last_status = 0;
 	ssize_t stored_line;
 	(void)argc;
 
