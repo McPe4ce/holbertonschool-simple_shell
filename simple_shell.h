@@ -18,11 +18,11 @@
 extern char **environ;
 
 /* shell.c */
-void run_shell(char *prog_name);
+int run_shell(char *prog_name);
 
 /* helpers.c */
 char *read_line(size_t *bufsize);
-void exec_cmd(char *line, char **argv, int line_num);
+int exec_cmd(char *line, char **argv, int line_num);
 
 /* String spliter*/
 char **split_string(const char *str, const char *delimiters);
