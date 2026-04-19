@@ -3,9 +3,8 @@
 /**
  * copy_idandexe - Creates the child process and executes the command.
  * @command: Command given by the user in the terminal
- * @the_shell: Name of the shell
+ * @the_shell: Name of the shell (argv[0])
  * Return: -1 on fork/wait error, exit status of child otherwise
- * (127 if not found)
  */
 
 int copy_idandexe(char *command, char *the_shell)
@@ -16,22 +15,22 @@ int copy_idandexe(char *command, char *the_shell)
 
 	pid = fork();
 	if (pid == -1)
-	{
 		return (-1);
-	}
 
 	if (pid == 0)
 	{
 		argv[0] = command;
 		argv[1] = NULL;
 		execve(command, argv, environ);
-		fprintf(stderr, "%s: No such file or directory\n", the_shell);
+		fprintf(stderr, "%s: 1: %s: not found\n", the_shell, command);
 		_exit(127);
 	}
-	else
-	{
-		wait(&status);
-	}
+
+	if (waitpid(pid, &status, 0) == -1)
+		return (-1);
+
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
 
 	return (-1);
 }
@@ -47,7 +46,7 @@ int main(int argc, char **argv)
 {
 	size_t length = 0;
 	char *line = NULL;
-	int null_checker, last_status = 0;
+	int null_checker, ret, last_status = 0;
 	ssize_t stored_line;
 	(void)argc;
 
@@ -63,9 +62,7 @@ int main(int argc, char **argv)
 		if (stored_line == -1)
 		{
 			if (isatty(STDIN_FILENO))
-			{
 				putchar('\n');
-			}
 			break;
 		}
 		for (null_checker = 0; line[null_checker] != '\0'; null_checker++)
@@ -76,10 +73,16 @@ int main(int argc, char **argv)
 				break;
 			}
 		}
-		if (line[0] != '\0')
-		{
-			copy_idandexe(line, argv[0]);
-		}
+		if (line[0] == '\0')
+			continue;
+		if (strcmp(line, "exit") == 0)
+			break;
+
+		ret = copy_idandexe(line, argv[0]);
+		if (ret == -1)
+			last_status = 1;
+		else
+			last_status = ret;
 	}
 	free(line);
 	return (last_status);
