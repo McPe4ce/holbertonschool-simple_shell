@@ -7,8 +7,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-
 /*
 *simple_shell.h,
 *This header regroups all the required prototypes and librairies needed,
@@ -28,14 +26,10 @@ void exec_cmd(char *line, char **argv, int line_num);
 char **split_string(const char *str, const char *delimiters);
 
 /* myfunctions.c */
-void free_exec(char **args, char *the_path);
-int _strlen(char *s);
-char *_strdup(char *s);
-char *_strcat_new(char *s1, char *s2);
-int _strcmp(char *s1, char *s2);
-
-/* PATH.c */
-char *_getenv(const char *name);
-char *pathfinder(char *cmd);
+	void free_args(char **args);
+	int _strlen(char *s);
+	char *_strdup(char *s);
+	char *_strcat_new(char *s1, char *s2);
+	int _strcmp(char *s1, char *s2);
 
 #endif

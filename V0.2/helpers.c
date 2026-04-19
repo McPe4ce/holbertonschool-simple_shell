@@ -45,33 +45,25 @@ void exec_cmd(char *line, char **argv, int line_num)
 	char **args = split_string(line, " \t");
 	pid_t pid;
 	int status;
-	char *the_path;
 
-	the_path = pathfinder(line);
-	if (!the_path)
-	{
-		fprintf(stderr, "%s: %d: %s: not found\n",
-			argv[0], line_num, line);
-		return;
-	}
 	if (argv == NULL || argv[0] == NULL)
 	{
-		free_exec(args, the_path);
+		free_args(args);
 		return;
 	}
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork");
-		free_exec(args, the_path);
+		free_args(args);
 		return;
 	}
 	if (pid == 0)
 	{
-		if (execve(the_path, args, environ) == -1)
+		if (execve(args[0], args, environ) == -1)
 		{
 			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, line);
-			free_exec(args, the_path);
+			free_args(args);
 			free(line);
 			_exit(127);
 		}
@@ -79,6 +71,6 @@ void exec_cmd(char *line, char **argv, int line_num)
 	else
 	{
 		waitpid(pid, &status, 0);
-		free_exec(args, the_path);
+		free_args(args);
 	}
 }
