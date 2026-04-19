@@ -47,8 +47,7 @@ void exec_cmd(char *line, char **argv, int line_num)
 	{
 		if (execve(line, args, environ) == -1)
 		{
-			fprintf(stderr, "%s: %d: %s: not found\n",
-				argv[0], line_num, line);
+			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, line);
 				free(line);
 			_exit(127);
 		}

@@ -27,9 +27,9 @@ void run_shell(char *prog_name)
 		if (line[0] != '\0')
 		{
 			exec_cmd(line, &prog_name, line_num);
-			free(line);
-			line = NULL;
 		}
+		free(line);
+		line = NULL;
 	}
 	free(line);
 }
