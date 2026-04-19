@@ -3,33 +3,35 @@
 /**
  * copy_idandexe - Creates the child process and executes the command.
  * @command: Command given by the user in the terminal
- * Return: -1 on fork/wait error, exit status of child otherwise (127 if not found)
+ * @the_shell: Name of the shell
+ * Return: -1 on fork/wait error, exit status of child otherwise
+ * (127 if not found)
  */
 
-int copy_idandexe(char *command)
+int copy_idandexe(char *command, char *the_shell)
 {
 	pid_t pid;
 	int status;
 	char *argv[2];
 
-	argv[0] = command;
-	argv[1] = NULL;
-
 	pid = fork();
 	if (pid == -1)
+	{
 		return (-1);
+	}
 
 	if (pid == 0)
 	{
+		argv[0] = command;
+		argv[1] = NULL;
 		execve(command, argv, environ);
+		fprintf(stderr, "%s: No such file or directory\n", the_shell);
 		_exit(127);
 	}
-
-	if (waitpid(pid, &status, 0) == -1)
-		return (-1);
-
-	if (WIFEXITED(status))
-		return (WEXITSTATUS(status));
+	else
+	{
+		wait(&status);
+	}
 
 	return (-1);
 }
@@ -56,11 +58,14 @@ int main(int argc, char **argv)
 			printf("($) ");
 			fflush(stdout);
 		}
+
 		stored_line = getline(&line, &length, stdin);
 		if (stored_line == -1)
 		{
 			if (isatty(STDIN_FILENO))
+			{
 				putchar('\n');
+			}
 			break;
 		}
 		for (null_checker = 0; line[null_checker] != '\0'; null_checker++)
@@ -71,24 +76,9 @@ int main(int argc, char **argv)
 				break;
 			}
 		}
-		if (line[0] == '\0')
-			continue;
-		if (strcmp(line, "exit") == 0)
-			break;
-		ret = copy_idandexe(line);
-		if (ret == 127)
+		if (line[0] != '\0')
 		{
-			fprintf(stderr, "%s: 1: %s: not found\n", argv[0], line);
-			last_status = 127;
-		}
-		else if (ret == -1)
-		{
-			perror("fork/wait");
-			last_status = 1;
-		}
-		else
-		{
-			last_status = ret;
+			copy_idandexe(line, argv[0]);
 		}
 	}
 	free(line);
