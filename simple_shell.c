@@ -11,6 +11,5 @@
 int main(int argc, char **argv)
 {
 	(void)argc;
-	run_shell(argv[0]);
-	return (0);
+	return (run_shell(argv[0]));
 }
