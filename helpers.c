@@ -47,16 +47,16 @@ void exec_cmd(char *line, char **argv, int line_num)
 	int status;
 	char *the_path;
 
-	the_path = pathfinder(line);
+	if (argv == NULL || argv[0] == NULL)
+	{
+		free_exec(args, NULL);
+		return;
+	}
+	the_path = pathfinder(args[0]);
 	if (!the_path)
 	{
 		fprintf(stderr, "%s: %d: %s: not found\n",
-			argv[0], line_num, line);
-		return;
-	}
-	if (argv == NULL || argv[0] == NULL)
-	{
-		free_exec(args, the_path);
+			argv[0], line_num, args[0]);
 		return;
 	}
 	pid = fork();
@@ -70,7 +70,7 @@ void exec_cmd(char *line, char **argv, int line_num)
 	{
 		if (execve(the_path, args, environ) == -1)
 		{
-			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, line);
+			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, args[0]);
 			free_exec(args, the_path);
 			free(line);
 			_exit(127);
