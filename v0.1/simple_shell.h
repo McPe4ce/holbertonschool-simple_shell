@@ -22,9 +22,6 @@ void run_shell(char *prog_name);
 char *read_line(size_t *bufsize);
 void exec_cmd(char *line, char **argv, int line_num);
 
-/* String spliter*/
-char **split_string(const char *str, const char *delimiters);
-
 /* myfunctions.c */
 	void free_args(char **args);
 	int _strlen(char *s);

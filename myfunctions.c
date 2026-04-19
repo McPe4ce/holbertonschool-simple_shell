@@ -1,13 +1,24 @@
 #include "simple_shell.h"
 
 /**
- * free_args - frees a NULL-terminated array of strings (not the strings)
- * @args: the array to free
+ * free_args - Frees the arguments of the array one by one before freeing
+ * the array
+ * @args: Arguments
  */
 void free_args(char **args)
 {
-	if (args)
-		free(args);
+	int indexor = 0;
+
+	if (!args)
+	{
+		return;
+	}
+	while (args[indexor])
+	{
+		free(args[indexor]);
+		indexor++;
+	}
+	free(args);
 }
 
 /**

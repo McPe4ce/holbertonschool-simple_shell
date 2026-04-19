@@ -42,35 +42,30 @@ char *read_line(size_t *bufsize)
  */
 void exec_cmd(char *line, char **argv, int line_num)
 {
-	char **args = split_string(line, " \t");
+	char *args[2];
 	pid_t pid;
 	int status;
 
-	if (argv == NULL || argv[0] == NULL)
-	{
-		free_args(args);
-		return;
-	}
+	args[0] = line;
+	args[1] = NULL;
+
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork");
-		free_args(args);
 		return;
 	}
 	if (pid == 0)
 	{
-		if (execve(args[0], args, environ) == -1)
+		if (execve(line, args, environ) == -1)
 		{
 			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, line);
-			free_args(args);
-			free(line);
+				free(line);
 			_exit(127);
 		}
 	}
 	else
 	{
 		waitpid(pid, &status, 0);
-		free_args(args);
 	}
 }
