@@ -88,6 +88,7 @@ int exec_cmd(char *line, char **argv, int line_num, int last_status)
 {
 	char **args = split_string(line, " \t");
 	char *the_path;
+	int DAenv;
 
 	if (args == NULL || args[0] == NULL)
 	{
@@ -96,6 +97,12 @@ int exec_cmd(char *line, char **argv, int line_num, int last_status)
 	}
 	handle_builtin(args, line, last_status);
 
+	if (_strcmp(args[0], "env") == 0)
+	{
+		DAenv = handle_env();
+		free_exec(args, NULL);
+		return (DAenv);
+	}
 	the_path = pathfinder(args[0]);
 
 	if (!the_path)
