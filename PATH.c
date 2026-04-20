@@ -22,7 +22,7 @@ char *_getenv(const char *name)
 		{
 			return (*env + DAname + 1);
 		}
-        env++;
+		env++;
 	}
 	return (NULL);
 }
