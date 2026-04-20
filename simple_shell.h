@@ -38,4 +38,6 @@ int _strcmp(char *s1, char *s2);
 char *_getenv(const char *name);
 char *pathfinder(char *cmd);
 
+/*builtins.c*/
+int handle_builtin(char **args, char *line);
 #endif

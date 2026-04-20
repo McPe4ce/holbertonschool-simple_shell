@@ -54,6 +54,8 @@ int exec_cmd(char *line, char **argv, int line_num)
 		free_exec(args, NULL);
 		return (0);
 	}
+	if (handle_builtin(args, line))
+	return (0);
 	the_path = pathfinder(args[0]);
 	if (!the_path)
 	{
@@ -73,8 +75,7 @@ int exec_cmd(char *line, char **argv, int line_num)
 	{
 		if (execve(the_path, args, environ) == -1)
 		{
-			fprintf(stderr, "%s: %d: %s: not found\n",
-				argv[0], line_num, args[0]);
+			fprintf(stderr, "%s: %d: %s: not found\n", argv[0], line_num, args[0]);
 			free_exec(args, the_path);
 			free(line);
 			_exit(127);
