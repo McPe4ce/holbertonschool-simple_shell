@@ -54,6 +54,12 @@ int exec_cmd(char *line, char **argv, int line_num)
 		free_exec(args, NULL);
 		return (0);
 	}
+	if (_strcmp(args[0], "exit") == 0)
+	{
+    	free_exec(args, NULL);
+    	free(line);
+    	exit(0);
+	}
 	the_path = pathfinder(args[0]);
 	if (!the_path)
 	{
