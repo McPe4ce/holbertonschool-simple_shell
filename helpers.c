@@ -95,7 +95,7 @@ int exec_cmd(char *line, char **argv, int line_num, int last_status)
 		free_exec(args, NULL);
 		return (0);
 	}
-	handle_builtin(args, line, last_status);
+	handle_exit(args, line, last_status);
 
 	if (_strcmp(args[0], "env") == 0)
 	{

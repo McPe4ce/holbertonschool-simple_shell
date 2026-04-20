@@ -39,7 +39,7 @@ char *_getenv(const char *name);
 char *pathfinder(char *cmd);
 
 /*builtins.c*/
-void handle_builtin(char **args, char *line, int last_status);
+void handle_exit(char **args, char *line, int last_status);
 int handle_env(void);
 
 #endif
