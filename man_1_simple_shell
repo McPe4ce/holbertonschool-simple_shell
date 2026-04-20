@@ -1,0 +1,370 @@
+.TH SIMPLE_SHELL 1 "April 2026" "Holberton School" "User Commands"
+.SH NAME
+simple_shell \- a simple UNIX command line interpreter
+.SH SYNOPSIS
+.B simple_shell
+.br
+.B simple_shell
+[script_file]
+.SH DESCRIPTION
+.B simple_shell
+is a minimalist UNIX shell written in C as part of the Holberton School
+curriculum. It reads commands from standard input (interactive or piped),
+resolves their paths through the
+.B PATH
+environment variable, and executes them using
+.BR execve (2).
+.PP
+The shell supports two built-in commands and external command execution.
+It handles both interactive and non-interactive modes automatically by
+testing whether standard input is a terminal with
+.BR isatty (3).
+.SH INVOCATION
+When invoked interactively (standard input connected to a terminal), the
+shell displays the prompt
+.B $
+before each command. When standard input is not a terminal (pipe or file
+redirection), no prompt is printed and the shell reads commands silently
+until EOF.
+.PP
+The shell exits when it reads EOF (Ctrl+D in interactive mode) or when the
+.B exit
+built-in is called.
+.SH COMMAND EXECUTION
+For each line of input, the shell:
+.IP 1. 4
+Reads the line with
+.BR getline (3)
+and trims leading and trailing whitespace (spaces and tabs).
+.IP 2. 4
+Splits the trimmed line into tokens using spaces and tabs as delimiters
+(via
+.BR split_string ).
+.IP 3. 4
+Checks whether the first token matches a built-in command
+.RB ( exit ", " env ).
+.IP 4. 4
+If not a built-in, resolves the full executable path via
+.BR pathfinder ,
+which searches each directory listed in the
+.B PATH
+environment variable. If the command string contains a
+.B /
+character, it is used directly (after checking execute permission via
+.BR stat (2)).
+.IP 5. 4
+Forks a child process with
+.BR fork (2),
+executes the command with
+.BR execve (2)
+and
+.BR environ ,
+and waits for completion with
+.BR waitpid (2).
+.IP 6. 4
+Returns the exit status of the child to the shell loop.
+.PP
+Empty lines and lines consisting only of whitespace are silently ignored.
+.SH ENVIRONMENT
+.B simple_shell
+inherits the calling process's environment via the global
+.B extern char **environ
+variable. The built-in
+.B env
+command prints all variables in this array, one per line.
+.PP
+The shell reads
+.B PATH
+to locate external executables. If
+.B PATH
+is unset or empty, only commands specified with an explicit path will be found.
+.SH EXIT STATUS
+The shell exits with the exit status of the last command it executed.
+.PP
+.TP
+.B 0
+Successful execution.
+.TP
+.B 1
+A
+.BR fork (2)
+failure occurred.
+.TP
+.B 127
+Command not found: the executable could not be located in
+.B PATH
+or at the given path.
+.PP
+Any other value reflects the exit status returned by the last child process,
+extracted with
+.BR WEXITSTATUS (3).
+.SH SYNTAX
+Commands follow this simple syntax:
+.PP
+.RS
+.I command
+[argument ...]
+.RE
+.PP
+Tokens are separated by one or more spaces or tab characters. No quoting,
+no escaping, no variable expansion, no glob expansion, and no command
+substitution are supported.
+.SH ERROR HANDLING
+When a command is not found, the shell prints to standard error:
+.PP
+.RS
+.I prog_name: line_num: command: not found
+.RE
+.PP
+where
+.I prog_name
+is
+.BR argv[0] ,
+.I line_num
+is the 1-based index of the command in the current session, and
+.I command
+is the unresolved token.
+.PP
+When
+.BR fork (2)
+fails,
+.BR perror (3)
+is called and the shell returns status 1.
+.PP
+When
+.BR execve (2)
+fails inside the child, the same
+.I "not found"
+message is printed to standard error, memory is freed, and the child exits
+with status 127 via
+.BR _exit (2).
+.SH SYSTEM CALLS AND LIBRARY FUNCTIONS
+.SS System calls
+.TP
+.BR fork (2)
+Creates a child process for each external command.
+.TP
+.BR execve (2)
+Replaces the child's image with the target executable, passing
+.B environ
+as the environment.
+.TP
+.BR waitpid (2)
+Waits for the child to terminate and collects its exit status.
+.TP
+.BR write (2)
+Outputs the interactive prompt and the lines printed by the
+.B env
+built-in.
+.TP
+.BR _exit (2)
+Terminates the child immediately after a failed
+.BR execve (2).
+.TP
+.BR stat (2)
+Checks whether a candidate path is executable (
+.B S_IXUSR
+flag) during PATH resolution.
+.TP
+.BR isatty (3)
+Detects whether standard input is a terminal to decide whether to print the
+prompt.
+.SS Library functions
+.TP
+.BR getline (3)
+Reads a full line from standard input, allocating memory dynamically.
+.TP
+.BR strtok (3)
+Tokenises strings in
+.B split_string
+and
+.BR pathfinder .
+.TP
+.BR malloc (3) / free (3)
+Used throughout for dynamic memory allocation and release.
+.TP
+.BR fprintf (3) / perror (3)
+Used for error reporting to standard error.
+.TP
+.BR sprintf (3)
+Constructs candidate full paths during PATH resolution.
+.TP
+.BR strlen (3) / strncmp (3) / strchr (3)
+Used in
+.B _getenv
+and
+.B pathfinder
+for string operations.
+.TP
+.BR memcpy (3)
+Used in
+.B split_string
+to duplicate the input string before tokenising.
+.SH MEMORY MANAGEMENT
+All dynamically allocated memory is freed before each command cycle returns:
+.IP \(bu 4
+.B read_line
+allocates a buffer via
+.BR getline (3);
+the caller (
+.BR run_shell )
+frees it at the end of each iteration.
+.IP \(bu 4
+.B split_string
+allocates a working copy of the input and the resulting token array; both
+are freed by
+.B free_exec
+after the command completes.
+.IP \(bu 4
+.B pathfinder
+allocates a duplicate of the
+.B PATH
+value and the final full-path string; the full-path string is freed by
+.BR free_exec ,
+and the PATH copy is freed internally before the function returns.
+.PP
+On a failed
+.BR execve (2),
+the child frees its own copies via
+.B free_exec
+and
+.BR free (3)
+before calling
+.BR _exit (2)
+to avoid leaking memory in the child address space.
+.SH LIMITATIONS
+.IP \(bu 4
+No pipe support
+.RB ( | ).
+.IP \(bu 4
+No I/O redirection
+.RB ( > ", " < ", " >> ).
+.IP \(bu 4
+No command chaining with
+.B ;
+or logical operators
+.RB ( && ", " || ).
+.IP \(bu 4
+No command history or line editing.
+.IP \(bu 4
+No wildcard or glob expansion.
+.IP \(bu 4
+No variable expansion or assignment.
+.IP \(bu 4
+No quoting or escape character support (a space always splits tokens).
+.IP \(bu 4
+The
+.B exit
+built-in always exits with the last command's status; a numeric argument to
+.B exit
+is not parsed.
+.IP \(bu 4
+PATH resolution uses
+.B strtok
+internally, which is not re-entrant; nested calls would be unsafe.
+.SH FILES
+.TP
+.B simple_shell.c
+Entry point; contains
+.BR main .
+.TP
+.B shell_loop.c
+Main shell loop; contains
+.BR run_shell .
+.TP
+.B helpers.c
+Input reading and command dispatch; contains
+.BR read_line ,
+.BR exec_cmd ,
+and the static helper
+.BR run_external .
+.TP
+.B builtins.c
+Built-in command handlers; contains
+.BR handle_exit
+and
+.BR handle_env .
+.TP
+.B PATH.c
+Environment and path resolution; contains
+.BR _getenv
+and
+.BR pathfinder .
+.TP
+.B string_spliter.c
+Tokeniser; contains
+.BR split_string .
+.TP
+.B myfunctions.c
+String utility library; contains
+.BR free_exec ,
+.BR _strlen ,
+.BR _strdup ,
+.BR _strcat_new ,
+and
+.BR _strcmp .
+.TP
+.B simple_shell.h
+Single header declaring all prototypes and including system headers.
+.SH COMPILATION
+.nf
+gcc \-Wall \-Werror \-Wextra \-pedantic \-std=gnu89 \\
+    simple_shell.c shell_loop.c helpers.c builtins.c \\
+    PATH.c string_spliter.c myfunctions.c \-o hsh
+.fi
+.SH EXAMPLES
+.SS Interactive mode
+.nf
+$ ./hsh
+$ /bin/ls
+AUTHORS  PATH.c  builtins.c  helpers.c  man_1_simple_shell  \\
+myfunctions.c  shell_loop.c  simple_shell.c  simple_shell.h  \\
+string_spliter.c
+$ env
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOME=/root
+...
+$ exit
+.fi
+.SS Non-interactive mode
+.nf
+$ echo "/bin/ls" | ./hsh
+AUTHORS  PATH.c  builtins.c  helpers.c  ...
+.fi
+.SS Command not found
+.nf
+$ ./hsh
+$ foobar
+./hsh: 1: foobar: not found
+.fi
+.SH AUTHORS
+.TP
+McPe4ce <phil.ghanem@gmail.com>
+.TP
+Oliium <jeremie.rouxel@outlook.fr>
+.SH BUGS
+.IP \(bu 4
+The
+.B exit
+built-in ignores any argument; it always exits with the previous command's
+status rather than a user-supplied code.
+.IP \(bu 4
+.B split_string
+allocates the token array with no bounds check on the count; a pathologically
+long command line with many tokens could exhaust memory silently.
+.IP \(bu 4
+.B pathfinder
+uses
+.BR strtok (3),
+which modifies a copy of PATH but is non-reentrant; concurrent or nested
+calls would produce undefined behaviour.
+.SH SEE ALSO
+.BR sh (1),
+.BR bash (1),
+.BR dash (1),
+.BR execve (2),
+.BR fork (2),
+.BR waitpid (2),
+.BR stat (2),
+.BR getline (3),
+.BR environ (7)
