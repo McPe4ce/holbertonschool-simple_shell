@@ -22,7 +22,7 @@ int run_shell(char *prog_name);
 
 /* helpers.c */
 char *read_line(size_t *bufsize);
-int exec_cmd(char *line, char **argv, int line_num);
+int exec_cmd(char *line, char **argv, int line_num, int last_status);
 
 /* String spliter*/
 char **split_string(const char *str, const char *delimiters);
@@ -39,5 +39,5 @@ char *_getenv(const char *name);
 char *pathfinder(char *cmd);
 
 /*builtins.c*/
-void handle_builtin(char **args, char *line);
+void handle_builtin(char **args, char *line, int last_status);
 #endif

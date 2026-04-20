@@ -29,7 +29,7 @@ int run_shell(char *prog_name)
 		line_num++;
 		if (line[0] != '\0')
 		{
-			last_status = exec_cmd(line, &prog_name, line_num);
+			last_status = exec_cmd(line, &prog_name, line_num, last_status);
 		}
 		free(line);
 		line = NULL;
