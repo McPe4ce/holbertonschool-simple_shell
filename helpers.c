@@ -80,9 +80,11 @@ static int run_external(char *the_path, char **args, char **argv,
  * @argv: pointer to argv[0] for error messages
  * @line_num: current line number for error messages
  *
+ * @last_status: status of the previously executed command
+ *
  * Return: exit status of the executed command
  */
-int exec_cmd(char *line, char **argv, int line_num)
+int exec_cmd(char *line, char **argv, int line_num, int last_status)
 {
 	char **args = split_string(line, " \t");
 	char *the_path;
@@ -92,7 +94,7 @@ int exec_cmd(char *line, char **argv, int line_num)
 		free_exec(args, NULL);
 		return (0);
 	}
-	handle_builtin(args, line);
+	handle_builtin(args, line, last_status);
 
 	the_path = pathfinder(args[0]);
 
