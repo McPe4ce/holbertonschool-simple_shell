@@ -4,9 +4,8 @@
  * handle_builtin - The exit builtin is handled here and ends process
  * @args: arguments parsed
  * @line: the command to execute
- * Return: 0 (Success)
  */
-int handle_builtin(char **args, char *line)
+void handle_builtin(char **args, char *line)
 {
 	if (_strcmp(args[0], "exit") == 0)
 	{
@@ -14,5 +13,4 @@ int handle_builtin(char **args, char *line)
 		free(line);
 		exit(0);
 	}
-	return (0);
 }
