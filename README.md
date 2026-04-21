@@ -206,7 +206,7 @@ Le dossier **`Flowchart/`** contient un schéma qui illustre visuellement la log
 
 ### Flowchart Simple_Shell.png
 
-![Flowchart du Simple Shell](Flowchart/Flowchart%20Shell.png)
+![Flowchart du Simple Shell](Flowchart/Flowchart%20Simple_Shell.png)
 
 > **C'est quoi un flowchart ?**
 > C'est un dessin avec des boîtes et des flèches qui montre, étape par étape, comment un programme prend ses décisions. Comme une recette de cuisine illustrée.
