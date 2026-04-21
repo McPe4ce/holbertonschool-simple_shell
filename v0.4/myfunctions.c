@@ -61,31 +61,6 @@ char *_strdup(char *s)
 }
 
 /**
- * _strcat_new - allocates a new string = s1 + s2
- * @s1: first string
- * @s2: second string
- *
- * Return: new concatenated string (caller must free), or NULL on failure
- */
-char *_strcat_new(char *s1, char *s2)
-{
-	char *result;
-	int len1, len2, i, j;
-
-	len1 = _strlen(s1);
-	len2 = _strlen(s2);
-	result = malloc(len1 + len2 + 1);
-	if (!result)
-		return (NULL);
-	for (i = 0; i < len1; i++)
-		result[i] = s1[i];
-	for (j = 0; j < len2; j++)
-		result[len1 + j] = s2[j];
-	result[len1 + len2] = '\0';
-	return (result);
-}
-
-/**
  * _strcmp - compares two strings
  * @s1: first string
  * @s2: second string
