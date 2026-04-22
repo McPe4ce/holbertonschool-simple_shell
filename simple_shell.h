@@ -31,7 +31,6 @@ char **split_string(const char *str, const char *delimiters);
 void free_exec(char **args, char *the_path);
 int _strlen(char *s);
 char *_strdup(char *s);
-char *_strcat_new(char *s1, char *s2);
 int _strcmp(char *s1, char *s2);
 
 /* PATH.c */
