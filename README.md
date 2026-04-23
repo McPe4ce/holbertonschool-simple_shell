@@ -1,5 +1,5 @@
 <div align="center">
-<img ./img/header_img.avif>
+<img src="img/header_img.avif" alt="Header image" width="800">
 
 # Simple Shell
 
